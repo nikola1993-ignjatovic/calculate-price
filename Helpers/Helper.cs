@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CalculatePrice.Helpers
+﻿namespace CalculatePrice.Helpers
 {
     public static class Helper
     {
@@ -13,6 +7,9 @@ namespace CalculatePrice.Helpers
             return desiredClientPrice / referentPrice - 1 < Constants.LowestAllowedRate 
                                                                     ? Constants.LowestAllowedRate 
                                                                     : desiredClientPrice / referentPrice - 1;
-        } 
+        }
+        public static string FixSheetName(string sheetName) => sheetName.Length > Constants.MaxLenghtOfSheet ? 
+                                                                                                sheetName.Substring(0, Constants.MaxLenghtOfSheet - 3) + "..." 
+                                                                                                :sheetName;
     }
 }

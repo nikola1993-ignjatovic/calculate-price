@@ -1,12 +1,8 @@
 ﻿using CalculatePrice.Dtos;
-using ClosedXML.Excel;
-using System;
 using System.Collections.Generic;
+using System;
 using System.Data;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CalculatePrice.Services
 {
@@ -20,11 +16,6 @@ namespace CalculatePrice.Services
         }
         public ITableService AddHeader()
         {
-            var properties = typeof(ExportRowBaseDto).GetProperties().ToList();
-            //properties.ForEach(property =>
-            //   _dataTable.Columns.Add(property.Name, 
-            //                          property.PropertyType));
-
             _dataTable.Columns.Add(nameof(ExportRowBaseDto.Symbol));
             _dataTable.Columns.Add(nameof(ExportRowBaseDto.OrderType));
             _dataTable.Columns.Add(nameof(ExportRowBaseDto.Low));
@@ -42,22 +33,17 @@ namespace CalculatePrice.Services
         }
         public ITableService AddSecondHeader()
         {
-            var properties = typeof(ExportRowBaseDto).GetProperties().ToList();
-            //properties.ForEach(property =>
-            //   _dataTable.Columns.Add(property.Name, 
-            //                          property.PropertyType));
-
-            _dataTable.Rows.Add(nameof(ExportRowBaseDto.Symbol), 
-                nameof(ExportRowBaseDto.OrderType),
-                nameof(ExportRowBaseDto.Low), 
-                nameof(ExportRowBaseDto.High),
-                nameof(ExportRowBaseDto.BrokerRate), 
-                nameof(ExportRowBaseDto.Location), 
-                nameof(ExportRowBaseDto.ReferentPrice),
-                nameof(ExportRowBaseDto.ClientPrice),
-                nameof(ExportRowBaseDto.Discount), 
-                nameof(ExportRowBaseDto.NewBrokerRate),
-                nameof(ExportRowBaseDto.Check));
+            _dataTable.Rows.Add(nameof(ExportRowBaseDto.Symbol),
+                                nameof(ExportRowBaseDto.OrderType),
+                                nameof(ExportRowBaseDto.Low),
+                                nameof(ExportRowBaseDto.High),
+                                nameof(ExportRowBaseDto.BrokerRate),
+                                nameof(ExportRowBaseDto.Location),
+                                nameof(ExportRowBaseDto.ReferentPrice),
+                                nameof(ExportRowBaseDto.ClientPrice),
+                                nameof(ExportRowBaseDto.Discount),
+                                nameof(ExportRowBaseDto.NewBrokerRate),
+                                nameof(ExportRowBaseDto.Check));
             return this;
         }
         public ITableService AddRows(List<ExportRowBaseDto> rows)
@@ -104,7 +90,7 @@ namespace CalculatePrice.Services
                 }
             }
         }
-        public DataTable GetTable() => _dataTable;        
+        public DataTable GetTable() => _dataTable;
         public void Dispose()
         {
             Dispose(true);

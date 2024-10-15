@@ -1,22 +1,27 @@
 ﻿using CalculatePrice.Dtos;
 using CalculatePrice.Enums;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.Data;
-using System.Drawing;
-
+using Helper =  CalculatePrice.Helpers.Helper;
 namespace CalculatePrice.Services
 {
     public class DocumentService : IDisposable, IDocumentService
     {
         private XLWorkbook _workbook;
         private bool _disposed = false;
+        private string InputfileProductsPath { get; set; }
+        private string InputfileTiersPath { get; set; }
+        private string OutputFilePath { get; set; }
         public DocumentService()
         {
             _workbook = new XLWorkbook();
+            OutputFilePath = @"C:\Users\Nikola.Ignjatovic\Documents\sample_data.xlsx";
+            InputfileProductsPath = @"C:\Users\Nikola.Ignjatovic\Downloads\2024-10-04 HAA Buy Price Adjust (1).xlsx"; //read from settings
+            InputfileTiersPath = @"C:\Users\Nikola.Ignjatovic\Downloads\BrokerTierRates.xlsx"; //read from settings
         }
         public void CreateNewSheet(string sheetName)
         {
+            sheetName = Helper.FixSheetName(sheetName);
             if (_workbook.Worksheets.Contains(sheetName))
             {
                 System.Console.WriteLine($"Sheet '{sheetName}' already exists.");
@@ -28,14 +33,15 @@ namespace CalculatePrice.Services
         }
         private void HeaderStyling(IXLWorksheet worksheet, int firstCellRow, int firstCellColumn, int lastCellRow, int lastCellColumn)
         {
-            var range = worksheet.Range(firstCellRow, firstCellColumn, lastCellRow, lastCellColumn); 
+            var range = worksheet.Range(firstCellRow, firstCellColumn, lastCellRow, lastCellColumn);
             range.Style.Fill.BackgroundColor = XLColor.Blue;
             range.Style.Font.Bold = true;
-            range.Style.Font.FontColor = XLColor.White; 
+            range.Style.Font.FontColor = XLColor.White;
             range.Style.Font.FontSize = 14;
         }
         public void AddDataToSheet(DataTable dataTable, string sheetName)
         {
+            sheetName = Helper.FixSheetName(sheetName);
             if (!_workbook.Worksheets.Contains(sheetName))
             {
                 Console.WriteLine($"Sheet '{sheetName}' does not exist. Creating the sheet.");
@@ -58,18 +64,18 @@ namespace CalculatePrice.Services
                 }
             }
         }
-        public void SaveWorkbook(string filePath)
+        public void SaveWorkbook()
         {
-            _workbook.SaveAs(filePath);
-            System.Console.WriteLine($"Workbook saved to '{filePath}'.");
+            _workbook.SaveAs(OutputFilePath);
+            System.Console.WriteLine($"Workbook saved to '{OutputFilePath}'.");
         }
-        public List<ProductDto> GetAllProducts(string filePath, byte sheetNumber = 1)
+        public List<ProductDto> GetAllProducts(byte sheetNumber = 1)
         {
-            using (var workbook = new XLWorkbook(filePath))
+            using (var workbook = new XLWorkbook(InputfileProductsPath))
             {
                 var worksheet = workbook.Worksheet(sheetNumber);
 
-                var rows = worksheet.RowsUsed().Skip(1).ToList() ; //skip header               
+                var rows = worksheet.RowsUsed().Skip(1).ToList(); //skip header               
                 var products = new List<ProductDto>();
                 //:TODO Nikola VALIDATION FOR ALL FIELDS      
                 rows.ForEach(row =>
@@ -83,9 +89,9 @@ namespace CalculatePrice.Services
                 return products;
             }
         }
-        public List<ProductTierRateDto> GetAllProductTierRate(string filePath, byte sheetNumber = 1)
+        public List<ProductTierRateDto> GetAllProductTierRate(byte sheetNumber = 1)
         {
-            using (var workbook = new XLWorkbook(filePath))
+            using (var workbook = new XLWorkbook(InputfileTiersPath))
             {
                 var worksheet = workbook.Worksheet(sheetNumber);
 
@@ -98,7 +104,7 @@ namespace CalculatePrice.Services
                         Broker = row.Cell((int)ProductTierRateColumnType.Broker).GetString(),
                         Symbol = row.Cell((int)ProductTierRateColumnType.Symbol).GetString(),
                         LongCaption = row.Cell((int)ProductTierRateColumnType.LongCaption).GetString(),
-                        OrderType = row.Cell((int)ProductTierRateColumnType.OrderType).GetString(),
+                        OrderType = (OrderType)Enum.Parse(typeof(OrderType), row.Cell((int)ProductTierRateColumnType.OrderType).GetString()),
                         Low = row.Cell((int)ProductTierRateColumnType.Low).GetDouble(),
                         High = row.Cell((int)ProductTierRateColumnType.High).GetDouble(),
                         Rate = row.Cell((int)ProductTierRateColumnType.Rate).GetDouble(),

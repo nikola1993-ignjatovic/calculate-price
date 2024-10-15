@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CalculatePrice.Helpers
+﻿namespace CalculatePrice.Helpers
 {
     public class Constants
     {
         public const double LowestAllowedRate = 0.005;
         public const int NumberOfRowForFirstTier = 2;
+        public const int MaxLenghtOfSheet = 31;
         public static class AppSettings
         {
             public const string InputTiersFilePath = "InputTiersFilePath";
