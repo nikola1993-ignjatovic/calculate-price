@@ -13,16 +13,17 @@ using (var docService = new DocumentService())
             using (var tableService = new TableService())
             {          
                 string sheetName = row.Key;
-                docService.CreateNewSheet(sheetName);
-                var productRows = row.Value;
+                if (row.Value != null && row.Value.ExportBaseTiersRows.Any() && row.Value.ExportAllTiersRows.Any())
+                {
+                    docService.CreateNewSheet(sheetName, row.Value.NumberOfLocations);
+                    tableService
+                        .AddHeader()
+                        .AddRows(row.Value.ExportBaseTiersRows)
+                        .AddSecondHeader()
+                        .AddRows(row.Value.ExportAllTiersRows);
+                    docService.AddDataToSheet(tableService.GetTable(), sheetName, row.Value.NumberOfLocations);
+                }
 
-                tableService
-                            .AddHeader()
-                            .AddRows(productRows.Take(Constants.NumberOfRowForFirstTier).ToList())
-                            .AddSecondHeader()
-                            .AddRows(productRows.Skip(Constants.NumberOfRowForFirstTier).ToList());
-
-                docService.AddDataToSheet(tableService.GetTable(), sheetName);
             }
         }
         docService.SaveWorkbook();

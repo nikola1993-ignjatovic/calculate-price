@@ -1,4 +1,6 @@
-﻿namespace CalculatePrice.Helpers
+﻿using CalculatePrice.Dtos;
+
+namespace CalculatePrice.Helpers
 {
     public static class Helper
     {
@@ -11,5 +13,6 @@
         public static string FixSheetName(string sheetName) => sheetName.Length > Constants.MaxLenghtOfSheet ? 
                                                                                                 sheetName.Substring(0, Constants.MaxLenghtOfSheet - 3) + "..." 
                                                                                                 :sheetName;
+        public static double GetReferentPrice(ProductDto productDto, ProductTierRateDto productTierRateDto) => productDto.Price / (1 + (double)(productTierRateDto?.Rate));
     }
 }

@@ -48,13 +48,16 @@ namespace CalculatePrice.Services
         }
         public ITableService AddRows(List<ExportRowBaseDto> rows)
         {
-            rows.ForEach(row =>
+            if (rows != null && rows.Any())
+            {
+                rows.ForEach(row =>
                        AddRow(row));
+            }
             return this;
         }
         private void AddRow(ExportRowBaseDto row)
         {
-            if (row is null)
+            if (row == null)
                 _dataTable.Rows.Add();
             else
             {
@@ -70,6 +73,7 @@ namespace CalculatePrice.Services
                                         row.ReferentPrice,
                                         row.ClientPrice,
                                         row.Discount,
+                                        row.DesiredClientPrice,
                                         row.NewBrokerRate,
                                         row.DiscountOnRate,
                                         row.Check);

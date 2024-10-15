@@ -6,8 +6,8 @@ namespace CalculatePrice.Services
 {
     public interface IDocumentService
     {
-        void CreateNewSheet(string sheetName);
-        void AddDataToSheet(DataTable dataTable, string sheetName);
+        void CreateNewSheet(string sheetName, byte numberOfLocations);
+        void AddDataToSheet(DataTable dataTable, string sheetName, byte numberOfLocations);
         List<ProductDto> GetAllProducts(byte sheetNumber = 1);
         List<ProductTierRateDto> GetAllProductTierRate(byte sheetNumber = 1);
         void SaveWorkbook();

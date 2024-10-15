@@ -9,7 +9,7 @@ namespace CalculatePrice.Dtos
 {
     public class ExportRowBaseDto
     {
-
+        //TODO description attribute
         public virtual string? Symbol { get; set; }
         public virtual string? OrderType { get; set; }
         public virtual double Low { get; set; }

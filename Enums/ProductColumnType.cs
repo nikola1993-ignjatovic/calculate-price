@@ -4,6 +4,7 @@
     {
         Price = 2,
         RaiseOrLower = 3,
-        Caption = 5
+        Caption = 5,
+        Symbol = 6
     }
 }

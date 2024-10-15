@@ -1,5 +1,6 @@
 ﻿using CalculatePrice.Dtos;
 using CalculatePrice.Enums;
+using CalculatePrice.Helpers;
 using ClosedXML.Excel;
 using System.Data;
 using Helper =  CalculatePrice.Helpers.Helper;
@@ -19,7 +20,7 @@ namespace CalculatePrice.Services
             InputfileProductsPath = @"C:\Users\Nikola.Ignjatovic\Downloads\2024-10-04 HAA Buy Price Adjust (1).xlsx"; //read from settings
             InputfileTiersPath = @"C:\Users\Nikola.Ignjatovic\Downloads\BrokerTierRates.xlsx"; //read from settings
         }
-        public void CreateNewSheet(string sheetName)
+        public void CreateNewSheet(string sheetName, byte numberOfLocations)
         {
             sheetName = Helper.FixSheetName(sheetName);
             if (_workbook.Worksheets.Contains(sheetName))
@@ -28,8 +29,8 @@ namespace CalculatePrice.Services
                 return;
             }
             var worksheet = _workbook.Worksheets.Add(sheetName);
-            HeaderStyling(worksheet, 4, 1, 4, 11);
-            HeaderStyling(worksheet, 1, 1, 1, 13);
+            HeaderStyling(worksheet, 1, 1, 1, Constants.NumberOfColumnsBaseRate);
+            HeaderStyling(worksheet, numberOfLocations + Constants.NumberofUsedRows, 1, numberOfLocations + Constants.NumberofUsedRows, Constants.NumberOfColumnsAllRates);
         }
         private void HeaderStyling(IXLWorksheet worksheet, int firstCellRow, int firstCellColumn, int lastCellRow, int lastCellColumn)
         {
@@ -39,13 +40,13 @@ namespace CalculatePrice.Services
             range.Style.Font.FontColor = XLColor.White;
             range.Style.Font.FontSize = 14;
         }
-        public void AddDataToSheet(DataTable dataTable, string sheetName)
+        public void AddDataToSheet(DataTable dataTable, string sheetName, byte numberOfLocations)
         {
             sheetName = Helper.FixSheetName(sheetName);
             if (!_workbook.Worksheets.Contains(sheetName))
             {
                 Console.WriteLine($"Sheet '{sheetName}' does not exist. Creating the sheet.");
-                CreateNewSheet(sheetName);
+                CreateNewSheet(sheetName, numberOfLocations);
             }
 
             var worksheet = _workbook.Worksheet(sheetName);
@@ -77,13 +78,13 @@ namespace CalculatePrice.Services
 
                 var rows = worksheet.RowsUsed().Skip(1).ToList(); //skip header               
                 var products = new List<ProductDto>();
-                //:TODO Nikola VALIDATION FOR ALL FIELDS      
                 rows.ForEach(row =>
                     products.Add(new ProductDto()
                     {
                         Caption = row.Cell((int)ProductColumnType.Caption).GetString(),
                         Price = row.Cell((int)ProductColumnType.Price).GetDouble(),
-                        RaiseOrLower = row.Cell((int)ProductColumnType.RaiseOrLower).GetDouble()
+                        RaiseOrLower = row.Cell((int)ProductColumnType.RaiseOrLower).GetDouble(),
+                        Symbol = row.Cell((int)ProductColumnType.Symbol).GetString(),
                     })
                 );
                 return products;

@@ -19,12 +19,12 @@ namespace CalculatePrice.Services
         }
         public void BeginCalculation()
         {
-            products = _documentService.GetAllProducts();
+            products = _documentService.GetAllProducts(); //.Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
             productTierRateDtos = _documentService.GetAllProductTierRate() //TODO: prevent duplicates, move to Dictionary
                                                                 .OrderBy(x => x.Symbol)
                                                                 .OrderBy(x => x.Location)
                                                                 .ThenBy(x => x.OrderType)
-                                                                .ThenBy(x => x.Low)
+                                                                .ThenBy(x => x.Low)                                                                
                                                                 .ToList();
 
             foreach (var product in products)
@@ -42,43 +42,33 @@ namespace CalculatePrice.Services
                                   $"Location:{tierRateDto.Location} ");
             }
         }
-        public Dictionary<string, List<ExportRowBaseDto>> PerformCalculation()
+        public Dictionary<string, ExportProductDto>  PerformCalculation()
         {
-            var exportRows = new Dictionary<string, List<ExportRowBaseDto>>();
-            foreach (var product in products)
+            var exportRows = new Dictionary<string, ExportProductDto>();
+            foreach (var product in products.GroupBy(x => x.Caption))
             {
-              exportRows.Add(product.Caption, PerformProductCalculation(product));
+              exportRows.Add(product.Key, PerformProductCalculation(product));
             }
             return exportRows;
         }
-        public List<ExportRowBaseDto> PerformProductCalculation(ProductDto productDto)
+        //
+        private ExportProductDto PerformProductCalculation(IGrouping<string, ProductDto> productGroupDto)
         {
-            var exportRows = new List<ExportRowBaseDto>();            
-            var allTiersByProducts = productTierRateDtos.Where(x => x.LongCaption == productDto.Caption 
-                                                                                                        && x.OrderType == OrderType.Buy).ToList();
-                
-            var locationNewYork = LocationType.NewYork.ToLocationString();
-            var firstTierNewYork = productTierRateDtos.Where(x => x.LongCaption == productDto.Caption && x.OrderType == OrderType.Buy && x.Location == locationNewYork && x.Low == 0).FirstOrDefault();
-            var referentPrice = productDto.Price / (1 + (firstTierNewYork != null ? firstTierNewYork.Rate : 0));
+            var exportBaseTiersRows = new List<ExportRowBaseDto>();
+            var exportAllTiersRows = new List<ExportRowBaseDto>();
+            var allTiersByProducts = productTierRateDtos.Where(x => x.LongCaption == productGroupDto.Key && x.OrderType == OrderType.Buy).ToList();
 
-            var exportFirstRow = new ExportRowFirstDto()
+            byte numberOfLocations = 0;
+            foreach (var location in allTiersByProducts.Select(x => x.Location).Distinct())
             {
-                Symbol = firstTierNewYork?.Symbol,
-                OrderType = firstTierNewYork?.OrderType.ToString(),
-                ClientPrice = productDto.Price,
-                BrokerRate = firstTierNewYork != null ? firstTierNewYork.Rate : 0d,
-                Discount = productDto.RaiseOrLower,
-                Low = firstTierNewYork != null ? firstTierNewYork.Low : 0,
-                High = firstTierNewYork != null ? firstTierNewYork.High : 0,
-                Location = firstTierNewYork != null ? firstTierNewYork?.Location : string.Empty,
-                ReferentPrice = referentPrice,
-                ShowFirstRow = true
-            };
-            exportRows.Add(exportFirstRow);
-            exportRows.Add(null); //empty row between tables
-            foreach (var tier in allTiersByProducts)
-            {
-                var exportRow = new ExportRowDto()
+                var firstTiersByLocation = GetTiersRateByLocation(location, allTiersByProducts);
+                var firstTierByLocation = firstTiersByLocation.FirstOrDefault(x => x.Low == 0);
+                var productByLocation = productGroupDto.FirstOrDefault(x => x.Symbol == firstTierByLocation.Symbol);
+                var referentPrice = Helpers.Helper.GetReferentPrice(productByLocation, firstTierByLocation);
+                var exportFirstRow = PerformCalculationPerSymbol(firstTierByLocation, productByLocation, referentPrice);
+                exportBaseTiersRows.Add(exportFirstRow);
+
+                firstTiersByLocation.ForEach(tier => exportAllTiersRows.Add(new ExportRowDto
                 {
                     Symbol = tier.Symbol,
                     OrderType = tier.OrderType.ToString(),
@@ -89,10 +79,36 @@ namespace CalculatePrice.Services
                     High = tier.High,
                     Location = tier.Location,
                     OldDiscountOnRate = exportFirstRow.DiscountOnRate
-                };
-                exportRows.Add(exportRow);
-            }           
-            return exportRows;
+                }));
+                numberOfLocations++;
+            }
+
+            exportBaseTiersRows.Add(null); //ADD EMPTY ROW
+            return new ExportProductDto() { 
+                ExportBaseTiersRows = exportBaseTiersRows,
+                ExportAllTiersRows = exportAllTiersRows, 
+                NumberOfLocations = numberOfLocations 
+            };
+        }
+        private List<ProductTierRateDto> GetTiersRateByLocation(string location, List<ProductTierRateDto> allTiersByProducts)
+        {
+            return allTiersByProducts?.Where(x => x.Location == location).ToList();
+        }
+        private ExportRowFirstDto PerformCalculationPerSymbol(ProductTierRateDto productTierRateDto, ProductDto productDto, double referentPrice)
+        {
+            return new ExportRowFirstDto()
+            {
+                Symbol = productTierRateDto?.Symbol,
+                OrderType = productTierRateDto?.OrderType.ToString(),
+                ClientPrice = productDto.Price,
+                BrokerRate = productTierRateDto != null ? productTierRateDto.Rate : 0d,
+                Discount = productDto.RaiseOrLower,
+                Low = productTierRateDto != null ? productTierRateDto.Low : 0,
+                High = productTierRateDto != null ? productTierRateDto.High : 0,
+                Location = productTierRateDto != null ? productTierRateDto?.Location : string.Empty,
+                ReferentPrice = referentPrice,
+                ShowFirstRow = true
+            };
         }
         public void Dispose()
         {
