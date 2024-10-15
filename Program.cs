@@ -1,6 +1,4 @@
-﻿using CalculatePrice.Helpers;
-using CalculatePrice.Services;
-
+﻿using CalculatePrice.Services;
 
 using (var docService = new DocumentService())
 {

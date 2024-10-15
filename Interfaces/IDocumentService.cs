@@ -1,5 +1,4 @@
 ﻿using CalculatePrice.Dtos;
-using System.Collections.Generic;
 using System.Data;
 
 namespace CalculatePrice.Services
