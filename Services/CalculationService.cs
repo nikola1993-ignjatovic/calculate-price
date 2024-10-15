@@ -19,7 +19,7 @@ namespace CalculatePrice.Services
         }
         public void BeginCalculation()
         {
-            products = _documentService.GetAllProducts(); //.Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
+            products = _documentService.GetAllProducts().Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
             productTierRateDtos = _documentService.GetAllProductTierRate() //TODO: prevent duplicates, move to Dictionary
                                                                 .OrderBy(x => x.Symbol)
                                                                 .OrderBy(x => x.Location)
@@ -51,8 +51,8 @@ namespace CalculatePrice.Services
             }
             return exportRows;
         }
-        //
-        private ExportProductDto PerformProductCalculation(IGrouping<string, ProductDto> productGroupDto)
+        [Obsolete]
+        private ExportProductDto PerformProductCalculationOld(IGrouping<string, ProductDto> productGroupDto)
         {
             var exportBaseTiersRows = new List<ExportRowBaseDto>();
             var exportAllTiersRows = new List<ExportRowBaseDto>();
@@ -88,6 +88,26 @@ namespace CalculatePrice.Services
                 ExportBaseTiersRows = exportBaseTiersRows,
                 ExportAllTiersRows = exportAllTiersRows, 
                 NumberOfLocations = numberOfLocations 
+            };
+        }
+        private ExportProductDto PerformProductCalculation(IGrouping<string, ProductDto> productGroupDto)
+        {
+            var exportBaseTiersRows = new List<ExportRowBaseDto>();
+            var allTiersByProducts = productTierRateDtos.Where(x => x.LongCaption == productGroupDto.Key && x.OrderType == OrderType.Buy).ToList();
+            foreach (var tier in allTiersByProducts)
+            {
+                var productByLocation = productGroupDto.FirstOrDefault(x => x.Symbol == tier.Symbol);
+                if (productByLocation != null)
+                {
+                    var referentPrice = Helpers.Helper.GetReferentPrice(productByLocation, tier);
+                    var exportFirstRow = PerformCalculationPerSymbol(tier, productByLocation, referentPrice);
+                    exportBaseTiersRows.Add(exportFirstRow);
+                }
+            }
+
+            return new ExportProductDto()
+            {
+                ExportBaseTiersRows = exportBaseTiersRows                
             };
         }
         private List<ProductTierRateDto> GetTiersRateByLocation(string location, List<ProductTierRateDto> allTiersByProducts)

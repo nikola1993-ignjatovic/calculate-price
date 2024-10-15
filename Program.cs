@@ -13,15 +13,15 @@ using (var docService = new DocumentService())
             using (var tableService = new TableService())
             {          
                 string sheetName = row.Key;
-                if (row.Value != null && row.Value.ExportBaseTiersRows.Any() && row.Value.ExportAllTiersRows.Any())
+                if (row.Value != null && row.Value.ExportBaseTiersRows.Any()) //&& row.Value.ExportAllTiersRows.Any())
                 {
-                    docService.CreateNewSheet(sheetName, row.Value.NumberOfLocations);
+                    docService.CreateNewSheet(sheetName); //docService.CreateNewSheetOld(sheetName, row.Value.NumberOfLocations);
                     tableService
                         .AddHeader()
-                        .AddRows(row.Value.ExportBaseTiersRows)
-                        .AddSecondHeader()
-                        .AddRows(row.Value.ExportAllTiersRows);
-                    docService.AddDataToSheet(tableService.GetTable(), sheetName, row.Value.NumberOfLocations);
+                        .AddRows(row.Value.ExportBaseTiersRows);
+                        //.AddSecondHeader()
+                        //.AddRows(row.Value.ExportAllTiersRows);
+                    docService.AddDataToSheet(tableService.GetTable(), sheetName); // docService.AddDataToSheetOld(tableService.GetTable(), sheetName, row.Value.NumberOfLocations);
                 }
 
             }

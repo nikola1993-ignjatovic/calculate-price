@@ -20,7 +20,8 @@ namespace CalculatePrice.Services
             InputfileProductsPath = @"C:\Users\Nikola.Ignjatovic\Downloads\2024-10-04 HAA Buy Price Adjust (1).xlsx"; //read from settings
             InputfileTiersPath = @"C:\Users\Nikola.Ignjatovic\Downloads\BrokerTierRates.xlsx"; //read from settings
         }
-        public void CreateNewSheet(string sheetName, byte numberOfLocations)
+        [Obsolete]
+        public void CreateNewSheetOld(string sheetName, byte numberOfLocations)
         {
             sheetName = Helper.FixSheetName(sheetName);
             if (_workbook.Worksheets.Contains(sheetName))
@@ -32,6 +33,17 @@ namespace CalculatePrice.Services
             HeaderStyling(worksheet, 1, 1, 1, Constants.NumberOfColumnsBaseRate);
             HeaderStyling(worksheet, numberOfLocations + Constants.NumberofUsedRows, 1, numberOfLocations + Constants.NumberofUsedRows, Constants.NumberOfColumnsAllRates);
         }
+        public void CreateNewSheet(string sheetName)
+        {
+            sheetName = Helper.FixSheetName(sheetName);
+            if (_workbook.Worksheets.Contains(sheetName))
+            {
+                System.Console.WriteLine($"Sheet '{sheetName}' already exists.");
+                return;
+            }
+            var worksheet = _workbook.Worksheets.Add(sheetName);
+            HeaderStyling(worksheet, 1, 1, 1, Constants.NumberOfColumnsBaseRate);
+        }
         private void HeaderStyling(IXLWorksheet worksheet, int firstCellRow, int firstCellColumn, int lastCellRow, int lastCellColumn)
         {
             var range = worksheet.Range(firstCellRow, firstCellColumn, lastCellRow, lastCellColumn);
@@ -40,13 +52,38 @@ namespace CalculatePrice.Services
             range.Style.Font.FontColor = XLColor.White;
             range.Style.Font.FontSize = 14;
         }
-        public void AddDataToSheet(DataTable dataTable, string sheetName, byte numberOfLocations)
+        public void AddDataToSheetOld(DataTable dataTable, string sheetName, byte numberOfLocations)
         {
             sheetName = Helper.FixSheetName(sheetName);
             if (!_workbook.Worksheets.Contains(sheetName))
             {
                 Console.WriteLine($"Sheet '{sheetName}' does not exist. Creating the sheet.");
-                CreateNewSheet(sheetName, numberOfLocations);
+                CreateNewSheetOld(sheetName, numberOfLocations);
+            }
+
+            var worksheet = _workbook.Worksheet(sheetName);
+
+            for (int col = 1; col <= dataTable.Columns.Count; col++)
+            {
+                worksheet.Cell(1, col).Value = dataTable.Columns[col - 1].ColumnName;
+            }
+
+            for (int row = 1; row <= dataTable.Rows.Count; row++)
+            {
+                for (int col = 1; col <= dataTable.Columns.Count; col++)
+                {
+                    var cellValue = dataTable.Rows[row - 1][col - 1] != null ? dataTable.Rows[row - 1][col - 1].ToString() : string.Empty;
+                    worksheet.Cell(row + 1, col).Value = cellValue;
+                }
+            }
+        }
+        public void AddDataToSheet(DataTable dataTable, string sheetName)
+        {
+            sheetName = Helper.FixSheetName(sheetName);
+            if (!_workbook.Worksheets.Contains(sheetName))
+            {
+                Console.WriteLine($"Sheet '{sheetName}' does not exist. Creating the sheet.");
+                CreateNewSheet(sheetName);
             }
 
             var worksheet = _workbook.Worksheet(sheetName);
