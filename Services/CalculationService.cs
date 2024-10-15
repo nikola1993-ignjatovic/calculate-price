@@ -19,7 +19,7 @@ namespace CalculatePrice.Services
         }
         public void BeginCalculation()
         {
-            products = _documentService.GetAllProducts().Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
+            products = _documentService.GetAllProducts();//.Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
             productTierRateDtos = _documentService.GetAllProductTierRate() //TODO: prevent duplicates, move to Dictionary
                                                                 .OrderBy(x => x.Symbol)
                                                                 .OrderBy(x => x.Location)
