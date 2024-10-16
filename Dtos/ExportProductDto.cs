@@ -4,7 +4,7 @@
     {
         public byte NumberOfLocations { get; set; }
          
-        public required List<ExportRowBaseDto> ExportBaseTiersRows { get; set; }
-        public required List<ExportRowBaseDto> ExportAllTiersRows { get; set; }
+        public List<ExportRowBaseDto> ExportBaseTiersRows { get; set; }
+        public List<ExportRowBaseDto> ExportAllTiersRows { get; set; }
     }
 }
