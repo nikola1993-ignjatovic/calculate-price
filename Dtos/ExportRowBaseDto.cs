@@ -1,8 +1,13 @@
-﻿namespace CalculatePrice.Dtos
+﻿using CalculatePrice.Helpers;
+
+namespace CalculatePrice.Dtos
 {
     public class ExportRowBaseDto
     {
         //TODO description attribute
+        public virtual string Header { get; set; } = Constants.Header;
+        public virtual string BrokerCode { get; set; } = Constants.BrokerCode;
+        public virtual string AccountCode { get; set; } = Constants.AccountCode;
         public virtual string? Symbol { get; set; }
         public virtual string? OrderType { get; set; }
         public virtual double Low { get; set; }
@@ -17,5 +22,6 @@
         public virtual double DiscountOnRate { get; set; }
         public virtual double Check { get; set; }
         public virtual bool ShowFirstRow { get; set; }
+        public virtual string MetalType => Helper.GetMetalTypeFromSymbol(Symbol);
     }
 }

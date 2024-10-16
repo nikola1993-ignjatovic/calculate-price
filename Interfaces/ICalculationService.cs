@@ -5,6 +5,6 @@ namespace CalculatePrice.Interfaces
     public interface ICalculationService
     {
         void BeginCalculation();
-        Dictionary<string, ExportProductDto> PerformCalculation();
+        Dictionary<string, List<ExportRowBaseDto>> PerformCalculation();
     }
 }

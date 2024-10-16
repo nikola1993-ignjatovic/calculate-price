@@ -1,4 +1,6 @@
 ﻿using CalculatePrice.Services;
+using ClosedXML.Excel;
+using Constants = CalculatePrice.Helpers.Constants;
 
 using (var docService = new DocumentService())
 {
@@ -9,21 +11,32 @@ using (var docService = new DocumentService())
         foreach (var row in exportRows)
         {
             using (var tableService = new TableService())
-            {          
+            {
                 string sheetName = row.Key;
-                if (row.Value != null && row.Value.ExportBaseTiersRows.Any()) //&& row.Value.ExportAllTiersRows.Any())
+                var isTestSuite = sheetName.Contains(Constants.TSPrefix);
+                if (row.Value != null && row.Value.Any()) 
                 {
-                    docService.CreateNewSheet(sheetName); //docService.CreateNewSheetOld(sheetName, row.Value.NumberOfLocations);
-                    tableService
-                        .AddHeader()
-                        .AddRows(row.Value.ExportBaseTiersRows);
-                        //.AddSecondHeader()
-                        //.AddRows(row.Value.ExportAllTiersRows);
-                    docService.AddDataToSheet(tableService.GetTable(), sheetName); // docService.AddDataToSheetOld(tableService.GetTable(), sheetName, row.Value.NumberOfLocations);
+                    var workBook = new XLWorkbook();
+                    docService.CreateNewSheet(workBook, sheetName);
+                    if (!isTestSuite)
+                    {
+                        tableService
+                            .AddHeader(row.Key)
+                            .AddRows(row.Value, isTestSuite);
+                    }
+                    else
+                    {
+                        tableService
+                            .Init(sheetName)
+                            .AddSubHeader(Constants.SetBroker, Constants.BrokerCode)
+                            .AddHeader(row.Key)
+                            .AddRows(row.Value, isTestSuite);
+                    }
+                    var dataTable =  tableService.GetTable();
+                    docService.AddDataToSheet(workBook, dataTable, sheetName);
+                    docService.SaveWorkBook(workBook, $"{sheetName}.xlsx");
                 }
-
             }
-        }
-        docService.SaveWorkbook();
+        }      
     }
 }

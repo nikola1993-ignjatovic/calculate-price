@@ -1,7 +1,9 @@
 ﻿using CalculatePrice.Dtos;
 using CalculatePrice.Enums;
+using CalculatePrice.Helpers;
 using CalculatePrice.Interfaces;
-
+using Constants = CalculatePrice.Helpers.Constants;
+using Helper = CalculatePrice.Helpers.Helper;
 namespace CalculatePrice.Services
 {
     public class CalculationService : ICalculationService, IDisposable
@@ -18,8 +20,8 @@ namespace CalculatePrice.Services
         }
         public void BeginCalculation()
         {
-            #if DEBUG
-                    products = _documentService.GetAllProducts().Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
+        #if DEBUG
+            products = _documentService.GetAllProducts(); //.Where(x => x.Caption == "Silver American Eagle (1 oz) Coin").ToList();
             #else
                 products = _documentService.GetAllProducts();
             #endif
@@ -31,27 +33,29 @@ namespace CalculatePrice.Services
                                                                 .ThenBy(x => x.Low)                                                                
                                                                 .ToList();
 
-            foreach (var product in products)
-            {
-                Console.WriteLine($"Caption: {product.Caption}, Price:{product.Price}, RaiseOrLower:{product.RaiseOrLower}");
-            }
-            foreach (var tierRateDto in productTierRateDtos)
-            {
-                Console.WriteLine($"Broker: {tierRateDto.Broker}," +
-                                  $"Symbol:{tierRateDto.Symbol}, " +
-                                  $"LongCaption:{tierRateDto.LongCaption}, " +
-                                  $"OrderType:{tierRateDto.OrderType}, " +
-                                  $"Low:{tierRateDto.Low}, " +
-                                  $"High:{tierRateDto.High}, " +
-                                  $"Location:{tierRateDto.Location} ");
-            }
+            //foreach (var product in products)
+            //{
+            //    Console.WriteLine($"Caption: {product.Caption}, Price:{product.Price}, RaiseOrLower:{product.RaiseOrLower}");
+            //}
+            //foreach (var tierRateDto in productTierRateDtos)
+            //{
+            //    Console.WriteLine($"Broker: {tierRateDto.Broker}," +
+            //                      $"Symbol:{tierRateDto.Symbol}, " +
+            //                      $"LongCaption:{tierRateDto.LongCaption}, " +
+            //                      $"OrderType:{tierRateDto.OrderType}, " +
+            //                      $"Low:{tierRateDto.Low}, " +
+            //                      $"High:{tierRateDto.High}, " +
+            //                      $"Location:{tierRateDto.Location} ");
+            //}
         }
-        public Dictionary<string, ExportProductDto>  PerformCalculation()
+        public Dictionary<string, List<ExportRowBaseDto>>  PerformCalculation()
         {
-            var exportRows = new Dictionary<string, ExportProductDto>();
+            var exportRows = new Dictionary<string, List<ExportRowBaseDto>>();
             foreach (var product in products.GroupBy(x => x.Caption))
             {
-              exportRows.Add(product.Key, PerformProductCalculation(product));
+                var calculatedRows = PerformProductCalculation(product);
+                exportRows.Add(product.Key, calculatedRows.ExportBaseTiersRows);
+                exportRows.Add(Helper.AddTestSuitePrefix(product.Key), calculatedRows.ExportTSBaseTiersRows);
             }
             return exportRows;
         }
@@ -97,23 +101,28 @@ namespace CalculatePrice.Services
         private ExportProductDto PerformProductCalculation(IGrouping<string, ProductDto> productGroupDto)
         {
             var exportBaseTiersRows = new List<ExportRowBaseDto>();
+            var exportTSBaseTiersRows = new List<ExportRowBaseDto>();
+            
             var allTiersByProducts = productTierRateDtos.Where(x => x.LongCaption == productGroupDto.Key && x.OrderType == OrderType.Buy).ToList();
             foreach (var tier in allTiersByProducts)
             {
                 var productByLocation = productGroupDto.FirstOrDefault(x => x.Symbol == tier.Symbol);
                 if (productByLocation != null)
                 {
-                    var referentPrice = Helpers.Helper.GetReferentPrice(productByLocation, tier);
+                    var referentPrice = Helper.GetReferentPrice(productByLocation, tier);
                     var exportFirstRow = PerformCalculationPerSymbol(tier, productByLocation, referentPrice);
                     exportBaseTiersRows.Add(exportFirstRow);
+                    var exportTestSuiteRow = AdaptCalcualtionForTestSuite(tier, productByLocation);
+                    exportTSBaseTiersRows.Add(exportTestSuiteRow);
                 }
             }
 
             return new ExportProductDto()
             {
-                ExportBaseTiersRows = exportBaseTiersRows                
+                ExportBaseTiersRows = exportBaseTiersRows ,
+                ExportTSBaseTiersRows = exportTSBaseTiersRows
             };
-        }
+        }      
         private List<ProductTierRateDto> GetTiersRateByLocation(string location, List<ProductTierRateDto> allTiersByProducts)
         {
             return allTiersByProducts?.Where(x => x.Location == location).ToList();
@@ -132,6 +141,17 @@ namespace CalculatePrice.Services
                 Location = productTierRateDto != null ? productTierRateDto?.Location : string.Empty,
                 ReferentPrice = referentPrice,
                 ShowFirstRow = true
+            };
+        }
+        private ExportTestSuiteRow AdaptCalcualtionForTestSuite(ProductTierRateDto productTierRateDto, ProductDto productDto)
+        {
+            return new ExportTestSuiteRow()
+            {
+                Symbol = productTierRateDto?.Symbol,
+                OrderType = productTierRateDto?.OrderType.ToString(),
+                Low = productTierRateDto != null ? productTierRateDto.Low : 0,
+                High = productTierRateDto != null ? productTierRateDto.High : 0,
+                BrokerRate = productTierRateDto != null ? productTierRateDto.Rate : 0d
             };
         }
         public void Dispose()

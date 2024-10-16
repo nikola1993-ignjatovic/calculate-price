@@ -1,4 +1,5 @@
 ﻿using CalculatePrice.Dtos;
+using ClosedXML.Excel;
 using System.Data;
 
 namespace CalculatePrice.Services
@@ -6,11 +7,11 @@ namespace CalculatePrice.Services
     public interface IDocumentService
     {
         void CreateNewSheetOld(string sheetName, byte numberOfLocations);
-        void CreateNewSheet(string sheetName);
+        void CreateNewSheet(XLWorkbook workbook, string sheetName);
         void AddDataToSheetOld(DataTable dataTable, string sheetName, byte numberOfLocations);
-        void AddDataToSheet(DataTable dataTable, string sheetName);
+        void AddDataToSheet(XLWorkbook workbook, DataTable dataTable, string sheetName);
         List<ProductDto> GetAllProducts(byte sheetNumber = 1);
         List<ProductTierRateDto> GetAllProductTierRate(byte sheetNumber = 1);
-        void SaveWorkbook();
+        void SaveWorkBook(XLWorkbook workbook, string outputFileName);
     }
 }
