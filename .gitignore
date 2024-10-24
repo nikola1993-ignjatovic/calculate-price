@@ -3,5 +3,6 @@
 ################################################################################
 
 /.vs/CalculatePrice
-/.gitignore
-/obj/Debug/net8.0
+/.vs/CalculatePrice
+/bin
+/obj

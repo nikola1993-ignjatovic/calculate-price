@@ -1,13 +1,7 @@
 ﻿using CalculatePrice.Dtos;
-using ClosedXML.Excel;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-
+using Helper = CalculatePrice.Helpers.Helper;
+using Constants = CalculatePrice.Helpers.Constants;
 namespace CalculatePrice.Services
 {
     public class TableService : IDisposable, ITableService
@@ -18,93 +12,143 @@ namespace CalculatePrice.Services
         {
             _dataTable = new DataTable();
         }
-        public ITableService AddHeader()
+        public ITableService Init(string sheetName)
         {
-            var properties = typeof(ExportRowBaseDto).GetProperties().ToList();
-            //properties.ForEach(property =>
-            //   _dataTable.Columns.Add(property.Name, 
-            //                          property.PropertyType));
-
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.Symbol));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.OrderType));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.Low));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.High));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.BrokerRate));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.Location));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.ReferentPrice));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.ClientPrice));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.Discount));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.DesiredClientPrice));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.NewBrokerRate));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.DiscountOnRate));
-            _dataTable.Columns.Add(nameof(ExportRowBaseDto.Check));
+            if (sheetName.Contains(Constants.TSPrefix))            
+            {
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.Header)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.BrokerCode)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.AccountCode)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.Symbol)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.OrderType)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.Low)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.High)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.BrokerRate)));
+                _dataTable.Columns.Add(Helper.CommentTestSuiteCommand(nameof(ExportTestSuiteRow.MetalType)));
+                                    
+            }
+            return this;
+        }
+        public ITableService AddHeader(string sheetName)
+        {
+            if (!sheetName.Contains(Constants.TSPrefix))
+            {
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.Symbol));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.OrderType));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.Low));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.High));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.BrokerRate));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.Location));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.ReferentPrice));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.ClientPrice));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.Discount));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.DesiredClientPrice));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.NewBrokerRate));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.DiscountOnRate));
+                _dataTable.Columns.Add(nameof(ExportRowBaseDto.Check));
+            }
+            else
+            {
+                _dataTable.Rows.Add(nameof(ExportTestSuiteRow.Header),
+                                    nameof(ExportTestSuiteRow.BrokerCode),
+                                    nameof(ExportTestSuiteRow.AccountCode),
+                                    nameof(ExportTestSuiteRow.Symbol),
+                                    nameof(ExportTestSuiteRow.OrderType),
+                                    nameof(ExportTestSuiteRow.Low),
+                                    nameof(ExportTestSuiteRow.High),
+                                    nameof(ExportTestSuiteRow.BrokerRate),
+                                    nameof(ExportTestSuiteRow.MetalType));
+            }
+        
             return this;
         }
         public ITableService AddSecondHeader()
         {
-            var properties = typeof(ExportRowBaseDto).GetProperties().ToList();
-            //properties.ForEach(property =>
-            //   _dataTable.Columns.Add(property.Name, 
-            //                          property.PropertyType));
-
-            _dataTable.Rows.Add(nameof(ExportRowBaseDto.Symbol), 
-                nameof(ExportRowBaseDto.OrderType),
-                nameof(ExportRowBaseDto.Low), 
-                nameof(ExportRowBaseDto.High),
-                nameof(ExportRowBaseDto.BrokerRate), 
-                nameof(ExportRowBaseDto.Location), 
-                nameof(ExportRowBaseDto.ReferentPrice),
-                nameof(ExportRowBaseDto.ClientPrice),
-                nameof(ExportRowBaseDto.Discount), 
-                nameof(ExportRowBaseDto.NewBrokerRate),
-                nameof(ExportRowBaseDto.Check));
+            _dataTable.Rows.Add(nameof(ExportRowBaseDto.Symbol),
+                                nameof(ExportRowBaseDto.OrderType),
+                                nameof(ExportRowBaseDto.Low),
+                                nameof(ExportRowBaseDto.High),
+                                nameof(ExportRowBaseDto.BrokerRate),
+                                nameof(ExportRowBaseDto.Location),
+                                nameof(ExportRowBaseDto.ReferentPrice),
+                                nameof(ExportRowBaseDto.ClientPrice),
+                                nameof(ExportRowBaseDto.Discount),
+                                nameof(ExportRowBaseDto.NewBrokerRate),
+                                nameof(ExportRowBaseDto.Check));
             return this;
         }
-        public ITableService AddRows(List<ExportRowBaseDto> rows)
+        public ITableService AddSubHeader(string key, string value)
         {
-            rows.ForEach(row =>
-                       AddRow(row));
+            _dataTable.Rows.Add(key, value);
+            _dataTable.Rows.Add();
+            _dataTable.Rows.Add();
             return this;
         }
-        private void AddRow(ExportRowBaseDto row)
+        public ITableService AddRows(List<ExportRowBaseDto> rows, bool isTestSuite)
         {
-            if (row is null)
+            if (rows != null && rows.Any())
+            {
+                rows.ForEach(row =>
+                       AddRow(row, isTestSuite));
+            }
+            return this;
+        }
+        private void AddRow(ExportRowBaseDto row, bool isTestSuite)
+        {
+            if (row == null)
                 _dataTable.Rows.Add();
             else
             {
-
-                if (row.ShowFirstRow)
+                if (isTestSuite)
                 {
-                    _dataTable.Rows.Add(row.Symbol,
+                    _dataTable.Rows.Add(
+                                        row.Header,     
+                                        row.BrokerCode,
+                                        row.AccountCode,
+                                        row.Symbol,
                                         row.OrderType,
                                         row.Low,
                                         row.High,
                                         row.BrokerRate,
-                                        row.Location,
-                                        row.ReferentPrice,
-                                        row.ClientPrice,
-                                        row.Discount,
-                                        row.NewBrokerRate,
-                                        row.DiscountOnRate,
-                                        row.Check);
+                                        row.MetalType);                    
                 }
                 else
                 {
-                    _dataTable.Rows.Add(row.Symbol,
-                                        row.OrderType,
-                                        row.Low,
-                                        row.High,
-                                        row.BrokerRate,
-                                        row.Location,
-                                        row.ReferentPrice,
-                                        row.ClientPrice,
-                                        row.Discount,
-                                        row.NewBrokerRate,
-                                        row.Check);
+
+                    if (row.ShowFirstRow)
+                    {
+                        _dataTable.Rows.Add(row.Symbol,
+                                            row.OrderType,
+                                            row.Low,
+                                            row.High,
+                                            row.BrokerRate,
+                                            row.Location,
+                                            row.ReferentPrice,
+                                            row.ClientPrice,
+                                            row.Discount,
+                                            row.DesiredClientPrice,
+                                            row.NewBrokerRate,
+                                            row.DiscountOnRate,
+                                            row.Check);
+                    }
+                    else
+                    {
+                        _dataTable.Rows.Add(row.Symbol,
+                                            row.OrderType,
+                                            row.Low,
+                                            row.High,
+                                            row.BrokerRate,
+                                            row.Location,
+                                            row.ReferentPrice,
+                                            row.ClientPrice,
+                                            row.Discount,
+                                            row.NewBrokerRate,
+                                            row.Check);
+                    }
                 }
             }
         }
-        public DataTable GetTable() => _dataTable;        
+        public DataTable GetTable() => _dataTable;
         public void Dispose()
         {
             Dispose(true);

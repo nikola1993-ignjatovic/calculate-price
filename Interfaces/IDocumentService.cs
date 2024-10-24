@@ -6,10 +6,12 @@ namespace CalculatePrice.Services
 {
     public interface IDocumentService
     {
-        void CreateNewSheet(string sheetName);
-        void AddDataToSheet(DataTable dataTable, string sheetName);
-        List<ProductDto> GetAllProducts(string filePath, byte sheetNumber = 1);
-        List<ProductTierRateDto> GetAllProductTierRate(string filePath, byte sheetNumber = 1);
-        void SaveWorkbook(string filePath);
+        void CreateNewSheetOld(string sheetName, byte numberOfLocations);
+        void CreateNewSheet(XLWorkbook workbook, string sheetName);
+        void AddDataToSheetOld(DataTable dataTable, string sheetName, byte numberOfLocations);
+        void AddDataToSheet(XLWorkbook workbook, DataTable dataTable, string sheetName);
+        List<ProductDto> GetAllProducts(byte sheetNumber = 1);
+        List<ProductTierRateDto> GetAllProductTierRate(byte sheetNumber = 1);
+        void SaveWorkBook(XLWorkbook workbook, string outputFileName);
     }
 }
